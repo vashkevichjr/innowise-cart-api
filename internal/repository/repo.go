@@ -5,14 +5,14 @@ import (
 	"github.com/vashkevichjr/innowise-cart-api/internal/db"
 )
 
-type CartRepo struct {
-	queries *db.Queries
-	pool    *pgxpool.Pool
+type Cart struct {
+	*db.Queries
+	pool *pgxpool.Pool
 }
 
-func NewCartRepo(pool *pgxpool.Pool) *CartRepo {
-	return &CartRepo{
-		queries: db.New(pool),
+func NewCartRepo(pool *pgxpool.Pool) *Cart {
+	return &Cart{
+		Queries: db.New(pool),
 		pool:    pool,
 	}
 }

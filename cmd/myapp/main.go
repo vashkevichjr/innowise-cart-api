@@ -26,4 +26,5 @@ func main() {
 	cartRepo := repository.NewCartRepo(pool)
 	_ = cartRepo
 	fmt.Println("starting server")
+
 }

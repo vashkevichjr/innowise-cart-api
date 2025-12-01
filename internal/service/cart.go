@@ -7,13 +7,14 @@ import (
 )
 
 type CartService struct {
-	repo repository.CartRepo
+	repo repository.Cart
 }
 
-func NewCartService(repo repository.CartRepo) *CartService {
+// изменить нейминг на Cart
+func NewCartService(repo repository.Cart) *CartService {
 	return &CartService{repo: repo}
 }
 
 func (s *CartService) CreateCart(ctx context.Context) {
-	_ = 1
+	s.repo.CreateCart(ctx)
 }
