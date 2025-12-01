@@ -1,15 +1,26 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	HTTPPort string
 	PGDSN    string
+}
+
+type envConfig struct {
+	HTTPPort   string `mapstructure:"HTTP_PORT" validate:"required,numeric"`
+	dbUser     string `mapstructure:"DB_USER" validate:"required"`
+	dbPassword string `mapstructure:"DB_PASSWORD" validate:"required"`
+	dbName     string `mapstructure:"DB_NAME" validate:"required"`
+	dbHost     string `mapstructure:"DB_HOST" validate:"required"`
+	dbPort     string `mapstructure:"DB_PORT" validate:"required,numeric"`
+	sslMode    string `mapstructure:"SSL_MODE" validate:"required,oneof=disable"`
 }
 
 func Load() (*Config, error) {
@@ -23,20 +34,30 @@ func Load() (*Config, error) {
 		}
 	}
 
-	httpPort := viper.GetString("HTTP_PORT")
-	if httpPort == "" {
-		return nil, fmt.Errorf("environment variable HTTP_PORT is not set")
+	cfg := envConfig{
+		HTTPPort:   viper.GetString("HTTP_PORT"),
+		dbUser:     viper.GetString("DB_USER"),
+		dbPassword: viper.GetString("DB_PASSWORD"),
+		dbName:     viper.GetString("DB_NAME"),
+		dbHost:     viper.GetString("DB_HOST"),
+		dbPort:     viper.GetString("DB_PORT"),
+		sslMode:    viper.GetString("SSL_MODE"),
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(cfg); err != nil {
+		return nil, fmt.Errorf("failed to validate config: %w", err)
 	}
 
 	pgDSN := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		viper.GetString("DB_USER"),
-		viper.GetString("DB_PASSWORD"),
-		viper.GetString("DB_HOST"),
-		viper.GetString("DB_PORT"),
-		viper.GetString("DB_NAME"),
-		viper.GetString("DB_SSL_MODE"))
+		cfg.dbUser,
+		cfg.dbPassword,
+		cfg.dbHost,
+		cfg.dbPort,
+		cfg.dbName,
+		cfg.sslMode)
 
-	return &Config{HTTPPort: httpPort, PGDSN: pgDSN}, nil
+	return &Config{HTTPPort: cfg.dbPort, PGDSN: pgDSN}, nil
 
 }

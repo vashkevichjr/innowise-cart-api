@@ -13,12 +13,12 @@ SELECT id, created_at, updated_at, deleted_at
 FROM carts
 WHERE deleted_at IS NULL;
 
--- name: SoftDeleteCart :one
+-- name: SoftDeleteCart :exec
 UPDATE carts
 SET deleted_at = NOW()
 WHERE id = $1;
 
--- name: HardDeleteCart :one
+-- name: HardDeleteCart :exec
 DELETE FROM carts
 WHERE id = $1;
 
@@ -33,7 +33,20 @@ RETURNING id;
 -- name: UpdateItem :one
 UPDATE items
 SET product = $2, price = $3
-WHERE id = $1;
+WHERE id = $1
+RETURNING id;
+
+-- name: UpdateItemProduct :one
+UPDATE items
+SET product = $2
+WHERE id = $1
+RETURNING id;
+
+-- name: UpdateItemPrice :one
+UPDATE items
+SET price = $2
+WHERE id = $1
+RETURNING id;
 
 -- name: GetItem :one
 SELECT id, product, price, created_at, updated_at
@@ -44,26 +57,37 @@ WHERE id = $1;
 SELECT id, product, price, created_at, updated_at
 FROM items;
 
--- name: SoftDeleteItem :one
+-- name: SoftDeleteItem :exec
 UPDATE items
 SET deleted_at = NOW()
 WHERE id = $1;
 
--- name: HardDeleteItem :one
+-- name: HardDeleteItem :exec
 DELETE FROM items
 WHERE id = $1;
 
 
 
 -- CART_ITEMS
--- name: AddItemToCart :one
-INSERT INTO cart_items (cart_id, item_id, quantity,)
+-- name: AddItemToCart :exec
+INSERT INTO cart_items (cart_id, item_id, quantity)
 VALUES ($1, $2, $3);
 
--- name: UpdateItemsInCart :one
+-- name: UpdateItemsInCart :exec
 UPDATE cart_items
 SET item_id = $3, quantity = $4
 WHERE cart_id = $1 and item_id = $2;
+UPDATE carts
+SET updated_at = NOW()
+WHERE id = $1;
+
+-- name: UpdateItemQuantity :exec
+UPDATE cart_items
+SET quantity = $3
+WHERE cart_id = $1 and item_id = $2;
+UPDATE carts
+SET updated_at = NOW()
+WHERE id = $1;
 
 -- name: GetItemsByCart :one
 SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
@@ -78,12 +102,12 @@ FROM carts c
          JOIN cart_items ci ON ci.cart_id = c.id
          JOIN items i ON i.id = ci.cart_id;
 
--- name: SoftDeleteItemByCart :one
+-- name: SoftDeleteItemByCart :exec
 UPDATE cart_items
 SET deleted_at = NOW()
 WHERE cart_id = $1 and item_id = $2;
 
--- name: HardDeleteItemByCart :one
+-- name: HardDeleteItemByCart :exec
 DELETE FROM cart_items
 WHERE cart_id = $1 and item_id = $2;
 
