@@ -1,27 +1,90 @@
+-- CARTS
 -- name: CreateCart :one
 INSERT INTO carts DEFAULT VALUES
 RETURNING id;
 
--- name: AddToCart :one
-INSERT INTO cart_items (cart_id, product, price)
-VALUES ($1, $2, $3)
-RETURNING id;
+-- name: GetCart :one
+SELECT id, created_at, updated_at, deleted_at
+FROM carts
+WHERE id = $1 AND deleted_at IS NULL;
 
--- name: RemoveFromCart :exec
-DELETE FROM cart_items
+-- name: GetCarts :many
+SELECT id, created_at, updated_at, deleted_at
+FROM carts
+WHERE deleted_at IS NULL;
+
+-- name: SoftDeleteCart :one
+UPDATE carts
+SET deleted_at = NOW()
 WHERE id = $1;
 
--- name: ViewCart :many
-SELECT id, cart_id, product, price
-FROM cart_items
-WHERE cart_id = $1;
-
--- name: DeleteCart :exec
+-- name: HardDeleteCart :one
 DELETE FROM carts
 WHERE id = $1;
 
--- name: UpdateCartItem :one
-UPDATE cart_items
-SET product = $2, price = $3
-WHERE id = $1
+
+
+-- ITEMS
+-- name: CreateItem :one
+INSERT INTO items(product, price)
+VALUES ($1,$2)
 RETURNING id;
+
+-- name: UpdateItem :one
+UPDATE items
+SET product = $2, price = $3
+WHERE id = $1;
+
+-- name: GetItem :one
+SELECT id, product, price, created_at, updated_at
+FROM items
+WHERE id = $1;
+
+-- name: GetItems :many
+SELECT id, product, price, created_at, updated_at
+FROM items;
+
+-- name: SoftDeleteItem :one
+UPDATE items
+SET deleted_at = NOW()
+WHERE id = $1;
+
+-- name: HardDeleteItem :one
+DELETE FROM items
+WHERE id = $1;
+
+
+
+-- CART_ITEMS
+-- name: AddItemToCart :one
+INSERT INTO cart_items (cart_id, item_id, quantity,)
+VALUES ($1, $2, $3);
+
+-- name: UpdateItemsInCart :one
+UPDATE cart_items
+SET item_id = $3, quantity = $4
+WHERE cart_id = $1 and item_id = $2;
+
+-- name: GetItemsByCart :one
+SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
+FROM carts c
+JOIN cart_items ci ON ci.cart_id = c.id
+JOIN items i ON i.id = ci.cart_id
+WHERE c.id = $1;
+
+-- name: GetCartItems :one
+SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
+FROM carts c
+         JOIN cart_items ci ON ci.cart_id = c.id
+         JOIN items i ON i.id = ci.cart_id;
+
+-- name: SoftDeleteItemByCart :one
+UPDATE cart_items
+SET deleted_at = NOW()
+WHERE cart_id = $1 and item_id = $2;
+
+-- name: HardDeleteItemByCart :one
+DELETE FROM cart_items
+WHERE cart_id = $1 and item_id = $2;
+
+
