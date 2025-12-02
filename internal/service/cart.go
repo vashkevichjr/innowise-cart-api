@@ -8,10 +8,10 @@ import (
 )
 
 type CartService struct {
-	repo repository.Cart
+	repo *repository.Cart
 }
 
-func NewCart(repo repository.Cart) *CartService {
+func NewCart(repo *repository.Cart) *CartService {
 	return &CartService{repo: repo}
 }
 

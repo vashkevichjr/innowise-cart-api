@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vashkevichjr/innowise-cart-api/internal/config"
 	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
+	"github.com/vashkevichjr/innowise-cart-api/internal/service"
 	"github.com/vashkevichjr/innowise-cart-api/pkg/postgres"
 )
 
@@ -27,8 +28,9 @@ func NewApp(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("error create postgres client: %w", err)
 	}
 
-	repo := repository.NewCartRepo(pool)
-	_ = repo
+	repoCart := repository.NewCartRepo(pool)
+	serviceCart := service.NewCart(repoCart)
+	_ = serviceCart
 
 	return &App{pool: pool}, err
 }
