@@ -73,7 +73,7 @@ WHERE id = $1;
 INSERT INTO cart_items (cart_id, item_id, quantity)
 VALUES ($1, $2, $3);
 
--- name: UpdateItemsInCart :exec
+-- name: UpdateItemInCart :exec
 UPDATE cart_items
 SET item_id = $3, quantity = $4
 WHERE cart_id = $1 and item_id = $2;
@@ -81,7 +81,7 @@ UPDATE carts
 SET updated_at = NOW()
 WHERE id = $1;
 
--- name: UpdateItemQuantity :exec
+-- name: UpdateItemInCartQuantity :exec
 UPDATE cart_items
 SET quantity = $3
 WHERE cart_id = $1 and item_id = $2;
@@ -89,14 +89,22 @@ UPDATE carts
 SET updated_at = NOW()
 WHERE id = $1;
 
--- name: GetItemsByCart :one
+-- name: GetItemsByCart :many
 SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
 FROM carts c
 JOIN cart_items ci ON ci.cart_id = c.id
 JOIN items i ON i.id = ci.cart_id
 WHERE c.id = $1;
 
--- name: GetCartItems :one
+-- name: GetCartsByItem :many
+SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
+FROM carts c
+         JOIN cart_items ci ON ci.cart_id = c.id
+         JOIN items i ON i.id = ci.cart_id
+WHERE c.id = $1;
+
+
+-- name: GetCartsItems :many
 SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
 FROM carts c
          JOIN cart_items ci ON ci.cart_id = c.id
