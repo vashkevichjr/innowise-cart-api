@@ -2,28 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/vashkevichjr/innowise-cart-api/internal/config"
-	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
-	"github.com/vashkevichjr/innowise-cart-api/pkg/postgres"
+	"github.com/vashkevichjr/innowise-cart-api/internal/app"
 )
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	ctx := context.Background()
-	pool, err := postgres.NewClient(ctx, cfg.PGDSN)
+	myapp, err := app.NewApp(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer pool.Close()
-
-	cartRepo := repository.NewCartRepo(pool)
-	_ = cartRepo
-	fmt.Println("starting server")
+	if err := myapp.Run(ctx); err != nil {
+		log.Fatal(err)
+	}
 }

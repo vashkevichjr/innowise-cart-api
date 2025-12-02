@@ -14,12 +14,12 @@ type Config struct {
 }
 
 type envConfig struct {
-	HTTPPort   string `mapstructure:"HTTP_PORT" validate:"required,numeric"`
+	HTTPPort   string `mapstructure:"HTTP_PORT" validate:"required"`
 	dbUser     string `mapstructure:"DB_USER" validate:"required"`
 	dbPassword string `mapstructure:"DB_PASSWORD" validate:"required"`
 	dbName     string `mapstructure:"DB_NAME" validate:"required"`
 	dbHost     string `mapstructure:"DB_HOST" validate:"required"`
-	dbPort     string `mapstructure:"DB_PORT" validate:"required,numeric"`
+	dbPort     string `mapstructure:"DB_PORT" validate:"required"`
 	sslMode    string `mapstructure:"SSL_MODE" validate:"required,oneof=disable"`
 }
 
