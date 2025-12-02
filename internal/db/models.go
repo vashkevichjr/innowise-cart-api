@@ -4,13 +4,31 @@
 
 package db
 
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
 type Cart struct {
-	ID int32
+	ID        int32
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
 }
 
 type CartItem struct {
-	ID      int32
-	CartID  int64
-	Product string
-	Price   int64
+	CartID    int64
+	ItemID    int64
+	Quantity  int32
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
+}
+
+type Item struct {
+	ID        int32
+	Product   string
+	Price     pgtype.Numeric
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
 }
