@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vashkevichjr/innowise-cart-api/internal/config"
@@ -33,12 +34,12 @@ func NewApp(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	fmt.Println("starting server")
+	log.Println("Starting app...")
 	return nil
 }
 
 func (a *App) Close(ctx context.Context) error {
-	fmt.Println("shutting down server")
+	log.Println("Shutting down...")
 	if a.pool != nil {
 		a.pool.Close()
 	}
