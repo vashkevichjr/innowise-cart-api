@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/vashkevichjr/innowise-cart-api/internal/db"
+	"github.com/vashkevichjr/innowise-cart-api/internal/entity"
 	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
 )
 
@@ -15,176 +17,125 @@ func NewCart(repo *repository.Cart) *CartService {
 	return &CartService{repo: repo}
 }
 
-//CARTS SERVICES
+// CONTRACT SERVICES
 
-func (s *CartService) CreateCart(ctx context.Context) (int32, error) {
-	id, err := s.repo.CreateCart(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (s *CartService) GetCart(ctx context.Context, id int32) (*db.Cart, error) {
-	cart, err := s.repo.GetCart(ctx, id)
+func (s *CartService) CreateCart(ctx context.Context) (cart *entity.Cart, err error) {
+	row, err := s.repo.CreateCart(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &cart, nil
+
+	cart = &entity.Cart{
+		Id:        row.ID,
+		Items:     []entity.CartItem{},
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
+	}
+
+	return cart, nil
 }
 
-func (s *CartService) GetCarts(ctx context.Context) (*[]db.Cart, error) {
-	carts, err := s.repo.GetCarts(ctx)
+func (s *CartService) AddItemToCart(ctx context.Context, args db.AddItemToCartParams) (cartItem *entity.CartItem, err error) {
+	err = s.repo.AddItemToCart(ctx, args)
 	if err != nil {
 		return nil, err
 	}
-	return &carts, nil
-}
 
-func (s *CartService) SoftDeleteCart(ctx context.Context, id int32) error {
-	err := s.repo.SoftDeleteCart(ctx, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *CartService) HardDeleteCart(ctx context.Context, id int32) error {
-	err := s.repo.HardDeleteCart(ctx, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//ITEMS SERVICES
-
-func (s *CartService) CreateItem(ctx context.Context, params db.CreateItemParams) (int32, error) {
-	id, err := s.repo.CreateItem(ctx, params)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (s *CartService) GetItem(ctx context.Context, id int32) (*db.GetItemRow, error) {
-	item, err := s.repo.GetItem(ctx, id)
+	item, err := s.repo.GetItem(ctx, args.ItemID)
 	if err != nil {
 		return nil, err
 	}
-	return &item, nil
+
+	cartItem = &entity.CartItem{
+		CartID:    args.CartID,
+		ItemID:    args.ItemID,
+		Name:      item.Product,
+		Price:     item.Price,
+		Quantity:  args.Quantity,
+		CreatedAt: item.CreatedAt.Time,
+		UpdatedAt: item.UpdatedAt.Time,
+	}
+	return cartItem, nil
 }
 
-func (s *CartService) GetItems(ctx context.Context) (*[]db.GetItemsRow, error) {
-	items, err := s.repo.GetItems(ctx)
+func (s *CartService) CreateItem(ctx context.Context, args db.CreateItemParams) (item *entity.Item, err error) {
+	row, err := s.repo.CreateItem(ctx, args)
 	if err != nil {
 		return nil, err
 	}
-	return &items, nil
-}
 
-func (s *CartService) UpdateItem(ctx context.Context, params db.UpdateItemParams) (int32, error) {
-	id, err := s.repo.UpdateItem(ctx, params)
-	if err != nil {
-		return 0, err
+	item = &entity.Item{
+		ID:        row.ID,
+		Name:      row.Product,
+		Price:     row.Price,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
 	}
-	return id, nil
+
+	return item, nil
 }
 
-func (s *CartService) UpdateItemPrice(ctx context.Context, params db.UpdateItemPriceParams) (int32, error) {
-	id, err := s.repo.UpdateItemPrice(ctx, params)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (s *CartService) UpdateItemProduct(ctx context.Context, params db.UpdateItemProductParams) (int32, error) {
-	id, err := s.repo.UpdateItemProduct(ctx, params)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (s *CartService) SoftDeleteItem(ctx context.Context, id int32) error {
-	err := s.repo.SoftDeleteItem(ctx, id)
+func (s *CartService) RemoveFromCart(ctx context.Context, args db.SoftDeleteItemByCartParams) error {
+	err := s.repo.SoftDeleteItemByCart(ctx, args)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *CartService) HardDeleteItem(ctx context.Context, id int32) error {
-	err := s.repo.HardDeleteItem(ctx, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//CART-ITEMS
-
-func (s *CartService) AddItemToCart(ctx context.Context, params db.AddItemToCartParams) error {
-	err := s.repo.AddItemToCart(ctx, params)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *CartService) UpdateItemInCart(ctx context.Context, params db.UpdateItemInCartParams) error {
-	err := s.repo.UpdateItemInCart(ctx, params)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *CartService) UpdateItemInCartQuantity(ctx context.Context, params db.UpdateItemInCartQuantityParams) error {
-	err := s.repo.UpdateItemInCartQuantity(ctx, params)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *CartService) GetItemsByCartID(ctx context.Context, cartID int32) (*[]db.GetItemsByCartRow, error) {
-	items, err := s.repo.GetItemsByCart(ctx, cartID)
+func (s *CartService) ViewCart(ctx context.Context, id int32) (cart *entity.Cart, err error) {
+	row, err := s.repo.GetCart(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return &items, err
-}
-
-func (s *CartService) GetCartsByItem(ctx context.Context, cartID int32) (*[]db.GetCartsByItemRow, error) {
-	items, err := s.repo.GetCartsByItem(ctx, cartID)
+	rows, err := s.repo.GetItemsByCart(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return &items, err
+
+	var items []entity.CartItem
+
+	for _, i := range rows {
+		items = append(items, entity.CartItem{CartID: i.CartID, ItemID: i.ItemID, Price: i.Price, Quantity: i.Quantity})
+	}
+
+	cart = &entity.Cart{
+		Id:        id,
+		Items:     items,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
+	}
+
+	return cart, nil
 }
 
-func (s *CartService) GetCartsItems(ctx context.Context) (*[]db.GetCartsItemsRow, error) {
-	items, err := s.repo.GetCartsItems(ctx)
+func (s *CartService) CalculatePrice(ctx context.Context, id int32) (calculator *entity.Calculator, err error) {
+	cart, err := s.ViewCart(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return &items, err
-}
 
-func (s *CartService) SoftDeleteItemByCart(ctx context.Context, params db.SoftDeleteItemByCartParams) error {
-	err := s.repo.SoftDeleteItemByCart(ctx, params)
-	if err != nil {
-		return err
+	var totalPrice float32
+	for _, item := range cart.Items {
+		totalPrice += item.Price
 	}
-	return nil
-}
 
-func (s *CartService) HardDeleteItemByCart(ctx context.Context, params db.HardDeleteItemByCartParams) error {
-	err := s.repo.HardDeleteItemByCart(ctx, params)
-	if err != nil {
-		return err
+	var discount int32
+
+	if len(cart.Items) == 0 {
+		return nil, errors.New("no items in cart")
+	} else if totalPrice > 5000 {
+		discount = 10
+	} else if len(cart.Items) >= 3 {
+		discount = 5
 	}
-	return nil
+
+	calculator = &entity.Calculator{
+		CartID:          cart.Id,
+		TotalPrice:      totalPrice,
+		DiscountPercent: discount,
+		FinalPrice:      totalPrice * float32(discount),
+	}
+
+	return calculator, nil
 }

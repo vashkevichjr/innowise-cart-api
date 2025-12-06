@@ -17,8 +17,8 @@ VALUES ($1, $2, $3)
 `
 
 type AddItemToCartParams struct {
-	CartID   int64
-	ItemID   int64
+	CartID   int32
+	ItemID   int32
 	Quantity int32
 }
 
@@ -30,34 +30,46 @@ func (q *Queries) AddItemToCart(ctx context.Context, arg AddItemToCartParams) er
 
 const createCart = `-- name: CreateCart :one
 INSERT INTO carts DEFAULT VALUES
-RETURNING id
+RETURNING id, created_at, updated_at, deleted_at
 `
 
 // CARTS
-func (q *Queries) CreateCart(ctx context.Context) (int32, error) {
+func (q *Queries) CreateCart(ctx context.Context) (Cart, error) {
 	row := q.db.QueryRow(ctx, createCart)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+	var i Cart
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const createItem = `-- name: CreateItem :one
 INSERT INTO items(product, price)
 VALUES ($1,$2)
-RETURNING id
+RETURNING id, product, price, created_at, updated_at, deleted_at
 `
 
 type CreateItemParams struct {
 	Product string
-	Price   pgtype.Numeric
+	Price   float32
 }
 
 // ITEMS
-func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (int32, error) {
+func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (Item, error) {
 	row := q.db.QueryRow(ctx, createItem, arg.Product, arg.Price)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+	var i Item
+	err := row.Scan(
+		&i.ID,
+		&i.Product,
+		&i.Price,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const getCart = `-- name: GetCart :one
@@ -118,11 +130,11 @@ WHERE c.id = $1
 `
 
 type GetCartsByItemRow struct {
-	CartID   int64
-	ItemID   int64
+	CartID   int32
+	ItemID   int32
 	Quantity int32
 	Product  string
-	Price    pgtype.Numeric
+	Price    float32
 }
 
 func (q *Queries) GetCartsByItem(ctx context.Context, id int32) ([]GetCartsByItemRow, error) {
@@ -159,11 +171,11 @@ FROM carts c
 `
 
 type GetCartsItemsRow struct {
-	CartID   int64
-	ItemID   int64
+	CartID   int32
+	ItemID   int32
 	Quantity int32
 	Product  string
-	Price    pgtype.Numeric
+	Price    float32
 }
 
 func (q *Queries) GetCartsItems(ctx context.Context) ([]GetCartsItemsRow, error) {
@@ -201,7 +213,7 @@ WHERE id = $1
 type GetItemRow struct {
 	ID        int32
 	Product   string
-	Price     pgtype.Numeric
+	Price     float32
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 }
@@ -227,7 +239,7 @@ FROM items
 type GetItemsRow struct {
 	ID        int32
 	Product   string
-	Price     pgtype.Numeric
+	Price     float32
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 }
@@ -267,11 +279,11 @@ WHERE c.id = $1
 `
 
 type GetItemsByCartRow struct {
-	CartID   int64
-	ItemID   int64
+	CartID   int32
+	ItemID   int32
 	Quantity int32
 	Product  string
-	Price    pgtype.Numeric
+	Price    float32
 }
 
 func (q *Queries) GetItemsByCart(ctx context.Context, id int32) ([]GetItemsByCartRow, error) {
@@ -326,8 +338,8 @@ WHERE cart_id = $1 and item_id = $2
 `
 
 type HardDeleteItemByCartParams struct {
-	CartID int64
-	ItemID int64
+	CartID int32
+	ItemID int32
 }
 
 func (q *Queries) HardDeleteItemByCart(ctx context.Context, arg HardDeleteItemByCartParams) error {
@@ -364,8 +376,8 @@ WHERE cart_id = $1 and item_id = $2
 `
 
 type SoftDeleteItemByCartParams struct {
-	CartID int64
-	ItemID int64
+	CartID int32
+	ItemID int32
 }
 
 func (q *Queries) SoftDeleteItemByCart(ctx context.Context, arg SoftDeleteItemByCartParams) error {
@@ -383,7 +395,7 @@ RETURNING id
 type UpdateItemParams struct {
 	ID      int32
 	Product string
-	Price   pgtype.Numeric
+	Price   float32
 }
 
 func (q *Queries) UpdateItem(ctx context.Context, arg UpdateItemParams) (int32, error) {
@@ -400,9 +412,9 @@ WHERE cart_id = $1 and item_id = $2
 `
 
 type UpdateItemInCartParams struct {
-	CartID   int64
-	ItemID   int64
-	ItemID_2 int64
+	CartID   int32
+	ItemID   int32
+	ItemID_2 int32
 	Quantity int32
 }
 
@@ -423,8 +435,8 @@ WHERE cart_id = $1 and item_id = $2
 `
 
 type UpdateItemInCartQuantityParams struct {
-	CartID   int64
-	ItemID   int64
+	CartID   int32
+	ItemID   int32
 	Quantity int32
 }
 
@@ -442,7 +454,7 @@ RETURNING id
 
 type UpdateItemPriceParams struct {
 	ID    int32
-	Price pgtype.Numeric
+	Price float32
 }
 
 func (q *Queries) UpdateItemPrice(ctx context.Context, arg UpdateItemPriceParams) (int32, error) {

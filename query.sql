@@ -1,7 +1,7 @@
 -- CARTS
 -- name: CreateCart :one
 INSERT INTO carts DEFAULT VALUES
-RETURNING id;
+RETURNING id, created_at, updated_at, deleted_at;
 
 -- name: GetCart :one
 SELECT id, created_at, updated_at, deleted_at
@@ -28,7 +28,7 @@ WHERE id = $1;
 -- name: CreateItem :one
 INSERT INTO items(product, price)
 VALUES ($1,$2)
-RETURNING id;
+RETURNING id, product, price, created_at, updated_at, deleted_at;
 
 -- name: UpdateItem :one
 UPDATE items

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vashkevichjr/innowise-cart-api/internal/config"
@@ -31,6 +32,11 @@ func NewApp(ctx context.Context) (*App, error) {
 	repoCart := repository.NewCartRepo(pool)
 	serviceCart := service.NewCart(repoCart)
 	_ = serviceCart
+	var handler http.Handler
+	err = http.ListenAndServe("", handler)
+	if err != nil {
+		return nil, fmt.Errorf("error create service: %w", err)
+	}
 
 	return &App{pool: pool}, err
 }

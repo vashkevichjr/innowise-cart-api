@@ -14,16 +14,6 @@ type Config struct {
 }
 
 type envConfig struct {
-	HTTPPort string `mapstructure:"HTTP_PORT" validate:"required,numeric"`
-	user     string `mapstructure:"DB_USER" validate:"required,oneof=disable"`
-	password string `mapstructure:"DB_PASSWORD" validate:"required,oneof=disable"`
-	name     string `mapstructure:"DB_NAME" validate:"required,oneof=disable"`
-	host     string `mapstructure:"DB_HOST" validate:"required,oneof=disable"`
-	port     string `mapstructure:"DB_PORT" validate:"required,oneof=disable"`
-	sslmode  string `mapstructure:"DB_SSL_MODE" validate:"required,oneof=disable"`
-}
-
-type envConfig struct {
 	HTTPPort   string `mapstructure:"HTTP_PORT" validate:"required"`
 	dbUser     string `mapstructure:"DB_USER" validate:"required"`
 	dbPassword string `mapstructure:"DB_PASSWORD" validate:"required"`

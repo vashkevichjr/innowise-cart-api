@@ -16,8 +16,8 @@ type Cart struct {
 }
 
 type CartItem struct {
-	CartID    int64
-	ItemID    int64
+	CartID    int32
+	ItemID    int32
 	Quantity  int32
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
@@ -27,7 +27,7 @@ type CartItem struct {
 type Item struct {
 	ID        int32
 	Product   string
-	Price     pgtype.Numeric
+	Price     float32
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 	DeletedAt pgtype.Timestamptz

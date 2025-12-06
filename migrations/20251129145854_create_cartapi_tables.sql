@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS carts(
 CREATE TABLE IF NOT EXISTS items (
                                      id SERIAL PRIMARY KEY,
                                      product VARCHAR(255) NOT NULL,
-                                     price DECIMAL NOT NULL,
+                                     price REAL NOT NULL,
 
                                      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                                      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (
-                                          cart_id BIGINT NOT NULL,
-                                          item_id BIGINT NOT NULL,
+                                          cart_id INT NOT NULL,
+                                          item_id INT NOT NULL,
                                           quantity INT NOT NULL,
 
                                           PRIMARY KEY (cart_id, item_id),
