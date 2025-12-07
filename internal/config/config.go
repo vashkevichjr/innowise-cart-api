@@ -58,6 +58,6 @@ func Load() (*Config, error) {
 		cfg.dbName,
 		cfg.sslMode)
 
-	return &Config{HTTPPort: cfg.dbPort, PGDSN: pgDSN}, nil
+	return &Config{HTTPPort: cfg.HTTPPort, PGDSN: pgDSN}, nil
 
 }

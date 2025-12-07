@@ -2,24 +2,25 @@ package service
 
 import (
 	"context"
-	"errors"
+
+	"github.com/pkg/errors"
 
 	"github.com/vashkevichjr/innowise-cart-api/internal/db"
 	"github.com/vashkevichjr/innowise-cart-api/internal/entity"
 	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
 )
 
-type CartService struct {
+type Cart struct {
 	repo *repository.Cart
 }
 
-func NewCart(repo *repository.Cart) *CartService {
-	return &CartService{repo: repo}
+func NewCart(repo *repository.Cart) *Cart {
+	return &Cart{repo: repo}
 }
 
 // CONTRACT SERVICES
 
-func (s *CartService) CreateCart(ctx context.Context) (cart *entity.Cart, err error) {
+func (s *Cart) CreateCart(ctx context.Context) (cart *entity.Cart, err error) {
 	row, err := s.repo.CreateCart(ctx)
 	if err != nil {
 		return nil, err
@@ -35,7 +36,13 @@ func (s *CartService) CreateCart(ctx context.Context) (cart *entity.Cart, err er
 	return cart, nil
 }
 
-func (s *CartService) AddItemToCart(ctx context.Context, args db.AddItemToCartParams) (cartItem *entity.CartItem, err error) {
+func (s *Cart) AddItemToCart(ctx context.Context, CartId int32, ItemId int32, Quantity int32) (cartItem *entity.CartItem, err error) {
+	args := db.AddItemToCartParams{
+		CartID:   CartId,
+		ItemID:   ItemId,
+		Quantity: Quantity,
+	}
+
 	err = s.repo.AddItemToCart(ctx, args)
 	if err != nil {
 		return nil, err
@@ -58,7 +65,11 @@ func (s *CartService) AddItemToCart(ctx context.Context, args db.AddItemToCartPa
 	return cartItem, nil
 }
 
-func (s *CartService) CreateItem(ctx context.Context, args db.CreateItemParams) (item *entity.Item, err error) {
+func (s *Cart) CreateItem(ctx context.Context, product string, price float32) (item *entity.Item, err error) {
+	args := db.CreateItemParams{
+		Product: product,
+		Price:   price,
+	}
 	row, err := s.repo.CreateItem(ctx, args)
 	if err != nil {
 		return nil, err
@@ -75,7 +86,12 @@ func (s *CartService) CreateItem(ctx context.Context, args db.CreateItemParams) 
 	return item, nil
 }
 
-func (s *CartService) RemoveFromCart(ctx context.Context, args db.SoftDeleteItemByCartParams) error {
+func (s *Cart) RemoveFromCart(ctx context.Context, CartId int32, ItemId int32) error {
+	args := db.SoftDeleteItemByCartParams{
+		CartID: CartId,
+		ItemID: ItemId,
+	}
+
 	err := s.repo.SoftDeleteItemByCart(ctx, args)
 	if err != nil {
 		return err
@@ -83,7 +99,7 @@ func (s *CartService) RemoveFromCart(ctx context.Context, args db.SoftDeleteItem
 	return nil
 }
 
-func (s *CartService) ViewCart(ctx context.Context, id int32) (cart *entity.Cart, err error) {
+func (s *Cart) ViewCart(ctx context.Context, id int32) (cart *entity.Cart, err error) {
 	row, err := s.repo.GetCart(ctx, id)
 	if err != nil {
 		return nil, err
@@ -109,7 +125,7 @@ func (s *CartService) ViewCart(ctx context.Context, id int32) (cart *entity.Cart
 	return cart, nil
 }
 
-func (s *CartService) CalculatePrice(ctx context.Context, id int32) (calculator *entity.Calculator, err error) {
+func (s *Cart) CalculatePrice(ctx context.Context, id int32) (calculator *entity.Calculator, err error) {
 	cart, err := s.ViewCart(ctx, id)
 	if err != nil {
 		return nil, err
@@ -117,10 +133,10 @@ func (s *CartService) CalculatePrice(ctx context.Context, id int32) (calculator 
 
 	var totalPrice float32
 	for _, item := range cart.Items {
-		totalPrice += item.Price
+		totalPrice += item.Price * float32(item.Quantity)
 	}
 
-	var discount int32
+	var discount int32 = 0
 
 	if len(cart.Items) == 0 {
 		return nil, errors.New("no items in cart")
@@ -128,13 +144,15 @@ func (s *CartService) CalculatePrice(ctx context.Context, id int32) (calculator 
 		discount = 10
 	} else if len(cart.Items) >= 3 {
 		discount = 5
+	} else {
+		discount = 1
 	}
 
 	calculator = &entity.Calculator{
 		CartID:          cart.Id,
 		TotalPrice:      totalPrice,
 		DiscountPercent: discount,
-		FinalPrice:      totalPrice * float32(discount),
+		FinalPrice:      totalPrice * (1 - float32(discount)/100),
 	}
 
 	return calculator, nil
