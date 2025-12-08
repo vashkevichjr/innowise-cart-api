@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
@@ -26,10 +29,14 @@ type envConfig struct {
 func Load() (*Config, error) {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
+
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		if !errors.As(err, &viper.ConfigFileNotFoundError{}) {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) || os.IsNotExist(err) {
+			log.Println("env file not found. Using system environment variables.")
+		} else {
 			return nil, fmt.Errorf("failed to load config file: %w", err)
 		}
 	}
@@ -49,6 +56,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to validate config: %w", err)
 	}
 
+	finalPort := cfg.HTTPPort
+	if !strings.HasPrefix(finalPort, ":") {
+		finalPort = ":" + finalPort
+	}
+
 	pgDSN := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		cfg.dbUser,
@@ -56,8 +68,11 @@ func Load() (*Config, error) {
 		cfg.dbHost,
 		cfg.dbPort,
 		cfg.dbName,
-		cfg.sslMode)
+		cfg.sslMode,
+	)
 
-	return &Config{HTTPPort: cfg.HTTPPort, PGDSN: pgDSN}, nil
-
+	return &Config{
+		HTTPPort: finalPort,
+		PGDSN:    pgDSN,
+	}, nil
 }

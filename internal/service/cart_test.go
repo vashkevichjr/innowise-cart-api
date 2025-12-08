@@ -90,5 +90,4 @@ func TestCart(t *testing.T) {
 	assert.Equal(t, float32(30000.0), calculator.TotalPrice, "TotalPrice is not correct")
 	assert.Equal(t, int32(10), calculator.DiscountPercent, "Discount is not correct")
 	assert.Equal(t, float32(27000.0), calculator.FinalPrice, "FinalPrice is not correct")
-
 }
