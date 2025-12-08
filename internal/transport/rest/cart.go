@@ -164,11 +164,18 @@ func (h *Handler) RemoveItemFromCart(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+type ViewCartItem struct {
+	CartID   int32   `json:"cart_id"`
+	ItemID   int32   `json:"item_id"`
+	Name     string  `json:"name"`
+	Price    float32 `json:"price"`
+	Quantity int32   `json:"quantity"`
+}
+
 type ViewCartResponse struct {
-	CartID    int32             `json:"cart_id"`
-	ItemId    int32             `json:"item_id"`
-	Items     []entity.CartItem `json:"items"`
-	CreatedAt time.Time         `json:"created_at"`
+	CartID    int32          `json:"cart_id"`
+	Items     []ViewCartItem `json:"items"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 func (h *Handler) ViewCart(c *gin.Context) {
@@ -179,16 +186,27 @@ func (h *Handler) ViewCart(c *gin.Context) {
 		return
 	}
 
-	cart, err := h.service.ViewCart(c.Request.Context(), int32(cartId))
+	row, err := h.service.ViewCart(c.Request.Context(), int32(cartId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
+	var items []ViewCartItem
+	for _, i := range row.Items {
+		items = append(items, ViewCartItem{
+			ItemID:   i.ItemID,
+			CartID:   i.CartID,
+			Name:     i.Name,
+			Price:    i.Price,
+			Quantity: i.Quantity,
+		})
+	}
+
 	viewCart := ViewCartResponse{
-		CartID:    cart.Id,
-		Items:     cart.Items,
-		CreatedAt: cart.CreatedAt,
+		CartID:    row.Id,
+		Items:     items,
+		CreatedAt: row.CreatedAt,
 	}
 
 	c.JSON(http.StatusOK, viewCart)

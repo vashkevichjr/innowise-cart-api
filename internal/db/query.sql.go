@@ -275,7 +275,7 @@ SELECT ci.cart_id, ci.item_id, ci.quantity, i.product, i.price
 FROM carts c
 JOIN cart_items ci ON ci.cart_id = c.id
 JOIN items i ON i.id = ci.item_id
-WHERE c.id = $1 and i.deleted_at IS NULL
+WHERE c.id = $1 and ci.deleted_at IS NULL
 `
 
 type GetItemsByCartRow struct {

@@ -5,16 +5,24 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/vashkevichjr/innowise-cart-api/internal/db"
 	"github.com/vashkevichjr/innowise-cart-api/internal/entity"
-	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
 )
 
-type Cart struct {
-	repo *repository.Cart
+type CartRepo interface {
+	CreateCart(ctx context.Context) (*entity.Cart, error)
+	CreateItem(ctx context.Context, product string, price float32) (*entity.Item, error)
+	AddItemToCart(ctx context.Context, cartId int32, itemId int32, quantity int32) error
+	GetCart(ctx context.Context, id int32) (*entity.Cart, error)
+	GetItem(ctx context.Context, id int32) (*entity.Item, error)
+	GetItemsByCart(ctx context.Context, id int32) ([]entity.CartItem, error)
+	SoftDeleteItemByCart(ctx context.Context, cartId int32, itemId int32) error
 }
 
-func NewCart(repo *repository.Cart) *Cart {
+type Cart struct {
+	repo CartRepo
+}
+
+func NewCart(repo CartRepo) *Cart {
 	return &Cart{repo: repo}
 }
 
@@ -27,72 +35,57 @@ func (s *Cart) CreateCart(ctx context.Context) (cart *entity.Cart, err error) {
 	}
 
 	cart = &entity.Cart{
-		Id:        row.ID,
+		Id:        row.Id,
 		Items:     []entity.CartItem{},
-		CreatedAt: row.CreatedAt.Time,
-		UpdatedAt: row.UpdatedAt.Time,
+		CreatedAt: row.CreatedAt,
+		UpdatedAt: row.UpdatedAt,
 	}
 
 	return cart, nil
 }
 
 func (s *Cart) AddItemToCart(ctx context.Context, CartId int32, ItemId int32, Quantity int32) (cartItem *entity.CartItem, err error) {
-	args := db.AddItemToCartParams{
-		CartID:   CartId,
-		ItemID:   ItemId,
-		Quantity: Quantity,
-	}
-
-	err = s.repo.AddItemToCart(ctx, args)
+	err = s.repo.AddItemToCart(ctx, CartId, ItemId, Quantity)
 	if err != nil {
 		return nil, err
 	}
 
-	item, err := s.repo.GetItem(ctx, args.ItemID)
+	item, err := s.repo.GetItem(ctx, ItemId)
 	if err != nil {
 		return nil, err
 	}
 
 	cartItem = &entity.CartItem{
-		CartID:    args.CartID,
-		ItemID:    args.ItemID,
-		Name:      item.Product,
+		CartID:    CartId,
+		ItemID:    ItemId,
+		Name:      item.Name,
 		Price:     item.Price,
-		Quantity:  args.Quantity,
-		CreatedAt: item.CreatedAt.Time,
-		UpdatedAt: item.UpdatedAt.Time,
+		Quantity:  Quantity,
+		CreatedAt: item.CreatedAt,
+		UpdatedAt: item.UpdatedAt,
 	}
 	return cartItem, nil
 }
 
 func (s *Cart) CreateItem(ctx context.Context, product string, price float32) (item *entity.Item, err error) {
-	args := db.CreateItemParams{
-		Product: product,
-		Price:   price,
-	}
-	row, err := s.repo.CreateItem(ctx, args)
+	row, err := s.repo.CreateItem(ctx, product, price)
 	if err != nil {
 		return nil, err
 	}
 
 	item = &entity.Item{
 		ID:        row.ID,
-		Name:      row.Product,
+		Name:      row.Name,
 		Price:     row.Price,
-		CreatedAt: row.CreatedAt.Time,
-		UpdatedAt: row.UpdatedAt.Time,
+		CreatedAt: row.CreatedAt,
+		UpdatedAt: row.UpdatedAt,
 	}
 
 	return item, nil
 }
 
 func (s *Cart) RemoveFromCart(ctx context.Context, CartId int32, ItemId int32) error {
-	args := db.SoftDeleteItemByCartParams{
-		CartID: CartId,
-		ItemID: ItemId,
-	}
-
-	err := s.repo.SoftDeleteItemByCart(ctx, args)
+	err := s.repo.SoftDeleteItemByCart(ctx, CartId, ItemId)
 	if err != nil {
 		return err
 	}
@@ -104,22 +97,16 @@ func (s *Cart) ViewCart(ctx context.Context, id int32) (cart *entity.Cart, err e
 	if err != nil {
 		return nil, err
 	}
-	rows, err := s.repo.GetItemsByCart(ctx, id)
+	items, err := s.repo.GetItemsByCart(ctx, id)
 	if err != nil {
 		return nil, err
-	}
-
-	var items []entity.CartItem
-
-	for _, i := range rows {
-		items = append(items, entity.CartItem{CartID: i.CartID, ItemID: i.ItemID, Price: i.Price, Quantity: i.Quantity})
 	}
 
 	cart = &entity.Cart{
 		Id:        id,
 		Items:     items,
-		CreatedAt: row.CreatedAt.Time,
-		UpdatedAt: row.UpdatedAt.Time,
+		CreatedAt: row.CreatedAt,
+		UpdatedAt: row.UpdatedAt,
 	}
 
 	return cart, nil
