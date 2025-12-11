@@ -7,13 +7,13 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	transport "github.com/vashkevichjr/innowise-cart-api/internal/transport/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vashkevichjr/innowise-cart-api/internal/config"
 	"github.com/vashkevichjr/innowise-cart-api/internal/repository"
 	"github.com/vashkevichjr/innowise-cart-api/internal/service"
-	"github.com/vashkevichjr/innowise-cart-api/internal/transport/rest"
 	"github.com/vashkevichjr/innowise-cart-api/pkg/postgres"
 )
 
@@ -37,7 +37,7 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	serviceCart := service.NewCart(repoCart)
 
-	handlerCart := rest.NewCartHandler(serviceCart)
+	handlerCart := transport.NewCartHandler(serviceCart)
 
 	r := gin.Default()
 	r.POST("/carts", handlerCart.CreateCart)

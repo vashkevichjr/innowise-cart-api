@@ -84,10 +84,10 @@ func TestCart(t *testing.T) {
 	_, err = svc.AddItemToCart(ctx, cart.Id, item.ID, 5)
 	require.NoError(t, err)
 
-	calculator, err := svc.CalculatePrice(ctx, cart.Id)
+	totalPrice, discount, finalPrice, err := svc.CalculatePrice(ctx, cart.Id)
 	require.NoError(t, err)
 
-	assert.Equal(t, float32(30000.0), calculator.TotalPrice, "TotalPrice is not correct")
-	assert.Equal(t, int32(10), calculator.DiscountPercent, "Discount is not correct")
-	assert.Equal(t, float32(27000.0), calculator.FinalPrice, "FinalPrice is not correct")
+	assert.Equal(t, float32(30000.0), totalPrice, "TotalPrice is not correct")
+	assert.Equal(t, int32(10), discount, "Discount is not correct")
+	assert.Equal(t, float32(27000.0), finalPrice, "FinalPrice is not correct")
 }
