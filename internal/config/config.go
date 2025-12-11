@@ -1,0 +1,78 @@
+package config
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+)
+
+type Config struct {
+	HTTPPort string `validate:"required,numeric"`
+	PGDSN    string `validate:"required"`
+}
+
+type envConfig struct {
+	HTTPPort   string `mapstructure:"HTTP_PORT" validate:"required"`
+	dbUser     string `mapstructure:"DB_USER" validate:"required"`
+	dbPassword string `mapstructure:"DB_PASSWORD" validate:"required"`
+	dbName     string `mapstructure:"DB_NAME" validate:"required"`
+	dbHost     string `mapstructure:"DB_HOST" validate:"required"`
+	dbPort     string `mapstructure:"DB_PORT" validate:"required"`
+	sslMode    string `mapstructure:"SSL_MODE" validate:"required,oneof=disable"`
+}
+
+func Load() (*Config, error) {
+	viper.SetConfigFile(".env")
+	viper.SetConfigType("env")
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if errors.As(err, &configFileNotFoundError) || os.IsNotExist(err) {
+			log.Println("env file not found. Using system environment variables.")
+		} else {
+			return nil, fmt.Errorf("failed to load config file: %w", err)
+		}
+	}
+
+	cfg := envConfig{
+		HTTPPort:   viper.GetString("HTTP_PORT"),
+		dbUser:     viper.GetString("DB_USER"),
+		dbPassword: viper.GetString("DB_PASSWORD"),
+		dbName:     viper.GetString("DB_NAME"),
+		dbHost:     viper.GetString("DB_HOST"),
+		dbPort:     viper.GetString("DB_PORT"),
+		sslMode:    viper.GetString("SSL_MODE"),
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(cfg); err != nil {
+		return nil, fmt.Errorf("failed to validate config: %w", err)
+	}
+
+	finalPort := cfg.HTTPPort
+	if !strings.HasPrefix(finalPort, ":") {
+		finalPort = ":" + finalPort
+	}
+
+	pgDSN := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		cfg.dbUser,
+		cfg.dbPassword,
+		cfg.dbHost,
+		cfg.dbPort,
+		cfg.dbName,
+		cfg.sslMode,
+	)
+
+	return &Config{
+		HTTPPort: finalPort,
+		PGDSN:    pgDSN,
+	}, nil
+}
