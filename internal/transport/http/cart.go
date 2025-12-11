@@ -1,4 +1,4 @@
-package rest
+package http
 
 import (
 	"net/http"
@@ -227,17 +227,17 @@ func (h *Handler) CalculateCart(c *gin.Context) {
 		return
 	}
 
-	row, err := h.service.CalculatePrice(c.Request.Context(), int32(cartId))
+	totalPrice, discount, finalPrice, err := h.service.CalculatePrice(c.Request.Context(), int32(cartId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
 	calculator := CalculateCartResponse{
-		CartID:          row.CartID,
-		TotalPrice:      row.TotalPrice,
-		DiscountPercent: row.DiscountPercent,
-		FinalPrice:      row.FinalPrice,
+		CartID:          int32(cartId),
+		TotalPrice:      totalPrice,
+		DiscountPercent: discount,
+		FinalPrice:      finalPrice,
 	}
 
 	c.JSON(http.StatusOK, calculator)

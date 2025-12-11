@@ -112,21 +112,20 @@ func (s *Cart) ViewCart(ctx context.Context, id int32) (cart *entity.Cart, err e
 	return cart, nil
 }
 
-func (s *Cart) CalculatePrice(ctx context.Context, id int32) (calculator *entity.Calculator, err error) {
+func (s *Cart) CalculatePrice(ctx context.Context, id int32) (totalPrice float32, discount int32, finalPrice float32, err error) {
 	cart, err := s.ViewCart(ctx, id)
 	if err != nil {
-		return nil, err
+		return 0, 0, 0, err
 	}
 
-	var totalPrice float32
 	for _, item := range cart.Items {
 		totalPrice += item.Price * float32(item.Quantity)
 	}
 
-	var discount int32 = 0
+	discount = 0
 
 	if len(cart.Items) == 0 {
-		return nil, errors.New("no items in cart")
+		return 0, 0, 0, errors.New("no items in cart")
 	} else if totalPrice > 5000 {
 		discount = 10
 	} else if len(cart.Items) >= 3 {
@@ -135,12 +134,7 @@ func (s *Cart) CalculatePrice(ctx context.Context, id int32) (calculator *entity
 		discount = 1
 	}
 
-	calculator = &entity.Calculator{
-		CartID:          cart.Id,
-		TotalPrice:      totalPrice,
-		DiscountPercent: discount,
-		FinalPrice:      totalPrice * (1 - float32(discount)/100),
-	}
+	finalPrice = totalPrice * (1 - float32(discount)/100)
 
-	return calculator, nil
+	return totalPrice, discount, finalPrice, nil
 }

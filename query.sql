@@ -71,7 +71,11 @@ WHERE id = $1;
 -- CART_ITEMS
 -- name: AddItemToCart :exec
 INSERT INTO cart_items (cart_id, item_id, quantity)
-VALUES ($1, $2, $3);
+VALUES ($1, $2, $3)
+ON CONFLICT (cart_id, item_id)
+    DO UPDATE SET
+                  deleted_at = NULL,
+                  quantity = excluded.quantity;
 
 -- name: UpdateItemInCart :exec
 UPDATE cart_items

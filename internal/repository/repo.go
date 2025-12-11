@@ -93,7 +93,7 @@ func (c *Cart) GetItemsByCart(ctx context.Context, id int32) ([]entity.CartItem,
 		return nil, err
 	}
 
-	items := make([]entity.CartItem, len(rows))
+	items := make([]entity.CartItem, 0)
 
 	for _, row := range rows {
 		item := entity.CartItem{

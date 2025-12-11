@@ -14,6 +14,10 @@ import (
 const addItemToCart = `-- name: AddItemToCart :exec
 INSERT INTO cart_items (cart_id, item_id, quantity)
 VALUES ($1, $2, $3)
+ON CONFLICT (cart_id, item_id)
+    DO UPDATE SET
+                  deleted_at = NULL,
+                  quantity = excluded.quantity
 `
 
 type AddItemToCartParams struct {
