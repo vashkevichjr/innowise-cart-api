@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: test
+data:
+  HTTP_PORT: "8080"
+  DB_USER: "vashkevich"
+  DB_NAME: "cartapi"
+  DB_HOST: "cartapi-db"
+  DB_PORT: "5432"
+  DB_SSL_MODE: "disable"
+
+
