@@ -42,8 +42,8 @@ func (h *Handler) CreateCart(c *gin.Context) {
 }
 
 type ItemRequest struct {
-	Name  string  `json:"name"`
-	Price float32 `json:"price"`
+	Name  string  `json:"name" binding:"required,min=1"`
+	Price float32 `json:"price" binding:"required,gt=0"`
 }
 
 type ItemResponse struct {
@@ -56,17 +56,7 @@ type ItemResponse struct {
 func (h *Handler) CreateItem(c *gin.Context) {
 	var req ItemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-
-	if req.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
-		return
-	}
-
-	if req.Price <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "price is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -87,7 +77,7 @@ func (h *Handler) CreateItem(c *gin.Context) {
 }
 
 type AddItemRequest struct {
-	Quantity int32 `json:"quantity"`
+	Quantity int32 `json:"quantity" binding:"required,gt=0"`
 }
 
 type AddItemResponse struct {
