@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-db
+  namespace: test
+spec:
+  completions: 1
+
+  backoffLimit: 3
+  template:
+    spec:
+      containers:
+        - name: goose-migrate
+          image: innowise-cart-api-app:latest
+          imagePullPolicy: Never
+
+          command:
+            - '/bin/goose'
+            - '-dir'
+            - '/root/migrations'
+            - 'postgres'
+            - 'postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSL_MODE)'
+            - 'up'
+
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secret
+
+      restartPolicy: Never

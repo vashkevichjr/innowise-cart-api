@@ -2,5 +2,33 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: test
-spec: {}
-status: {}
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: test-quota
+  namespace: test
+spec:
+  hard:
+    pods: '20'
+    requests.cpu: '2'
+    requests.memory: '4Gi'
+    limits.cpu: '6'
+    limits.memory: '8Gi'
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: test-limit-range
+  namespace: test
+spec:
+  limits:
+    - default:
+        memory: 512Mi
+        cpu: 500m
+      defaultRequest:
+        memory: 256Mi
+        cpu: 100m
+      type: Container
