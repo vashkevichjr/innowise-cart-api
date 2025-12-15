@@ -1,0 +1,41 @@
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+      - migrations
+    ports:
+      - ${HTTP_PORT}:${HTTP_PORT}
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_SSL_MODE=${DB_SSL_MODE}
+      - HTTP_PORT=${HTTP_PORT}
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - ${DB_EXTERNAL_PORT}:${DB_PORT}
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_SSL_MODE=${DB_SSL_MODE}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  migrations:
+    image: gomicro/goose:latest
+    volumes:
+      - ./migrations:/migrations
+    command: /bin/goose -dir /migrations postgres "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSL_MODE}" up
+    depends_on:
+      - db
+
+volumes:
+  db_data:

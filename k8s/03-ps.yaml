@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cartapi-db
+  namespace: test
+spec:
+  clusterIP: None
+  ports:
+    - port: 5432
+      name: postgres
+  selector:
+    app: cartapi-db
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cartapi-db
+  namespace: test
+spec:
+  serviceName: 'cartapi-db'
+  replicas: 5
+  selector:
+    matchLabels:
+      app: cartapi-db
+  template:
+    metadata:
+      labels:
+        app: 'cartapi-db'
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
+
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
+
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 1Gi
